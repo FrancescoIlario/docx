@@ -12,13 +12,13 @@ import (
 	"strings"
 )
 
-//Contains functions to work with data from a zip file
+//ZipData Contains functions to work with data from a zip file
 type ZipData interface {
 	files() []*zip.File
 	close() error
 }
 
-//Type for in memory zip files
+//ZipInMemory Type for in memory zip files
 type ZipInMemory struct {
 	data *zip.Reader
 }
@@ -33,7 +33,7 @@ func (d ZipInMemory) close() error {
 	return nil
 }
 
-//Type for zip files read from disk
+//ZipFile Type for zip files read from disk
 type ZipFile struct {
 	data *zip.ReadCloser
 }
@@ -46,6 +46,7 @@ func (d ZipFile) close() error {
 	return d.data.Close()
 }
 
+//ReplaceDocx main data structure
 type ReplaceDocx struct {
 	zipReader ZipData
 	content   string
@@ -54,6 +55,7 @@ type ReplaceDocx struct {
 	footers   map[string]string
 }
 
+//Editable Editable data structure
 func (r *ReplaceDocx) Editable() *Docx {
 	return &Docx{
 		files:   r.zipReader.files(),
@@ -64,10 +66,12 @@ func (r *ReplaceDocx) Editable() *Docx {
 	}
 }
 
+//Close closes the zip reader instance of RelaceDocx
 func (r *ReplaceDocx) Close() error {
 	return r.zipReader.close()
 }
 
+//Docx Main docx data structure
 type Docx struct {
 	files   []*zip.File
 	content string
@@ -76,10 +80,12 @@ type Docx struct {
 	footers map[string]string
 }
 
+// ReplaceRaw replaces a raw string
 func (d *Docx) ReplaceRaw(oldString string, newString string, num int) {
 	d.content = strings.Replace(d.content, oldString, newString, num)
 }
 
+//Replace encodes and replaces a string
 func (d *Docx) Replace(oldString string, newString string, num int) (err error) {
 	oldString, err = encode(oldString)
 	if err != nil {
@@ -94,6 +100,7 @@ func (d *Docx) Replace(oldString string, newString string, num int) (err error) 
 	return nil
 }
 
+//ReplaceLink replaces a link
 func (d *Docx) ReplaceLink(oldString string, newString string, num int) (err error) {
 	oldString, err = encode(oldString)
 	if err != nil {
@@ -108,14 +115,17 @@ func (d *Docx) ReplaceLink(oldString string, newString string, num int) (err err
 	return nil
 }
 
+//ReplaceHeader replaces in Header
 func (d *Docx) ReplaceHeader(oldString string, newString string) (err error) {
 	return replaceHeaderFooter(d.headers, oldString, newString)
 }
 
+//ReplaceFooter replaces in Footer
 func (d *Docx) ReplaceFooter(oldString string, newString string) (err error) {
 	return replaceHeaderFooter(d.footers, oldString, newString)
 }
 
+//WriteToFile writes the docx to a file given the path
 func (d *Docx) WriteToFile(path string) (err error) {
 	var target *os.File
 	target, err = os.Create(path)
@@ -174,6 +184,7 @@ func replaceHeaderFooter(headerFooter map[string]string, oldString string, newSt
 	return nil
 }
 
+//ReadDocxFromMemory reads the docx directly from memory
 func ReadDocxFromMemory(data io.ReaderAt, size int64) (*ReplaceDocx, error) {
 	reader, err := zip.NewReader(data, size)
 	if err != nil {
@@ -183,6 +194,7 @@ func ReadDocxFromMemory(data io.ReaderAt, size int64) (*ReplaceDocx, error) {
 	return ReadDocx(zipData)
 }
 
+// ReadDocxFile reads the docx from a path
 func ReadDocxFile(path string) (*ReplaceDocx, error) {
 	reader, err := zip.OpenReader(path)
 	if err != nil {
@@ -192,6 +204,7 @@ func ReadDocxFile(path string) (*ReplaceDocx, error) {
 	return ReadDocx(zipData)
 }
 
+// ReadDocx from zip
 func ReadDocx(reader ZipData) (*ReplaceDocx, error) {
 	content, err := readText(reader.files())
 	if err != nil {
