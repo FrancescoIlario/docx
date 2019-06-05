@@ -336,7 +336,7 @@ func retrieveHeaderFooterDoc(files []*zip.File) (headers []*zip.File, footers []
 		}
 	}
 	if len(headers) == 0 && len(footers) == 0 {
-		err = errors.New("headers[1-3].xml file not found and footers[1-3].xml file not found.")
+		err = errors.New("headers[1-3].xml file not found and footers[1-3].xml file not found")
 	}
 	return
 }

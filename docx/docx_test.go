@@ -10,6 +10,94 @@ import (
 const testFile = "../data/docx/TestDocument.docx"
 const testFileResult = "../data/docx/TestDocumentResult.docx"
 
+func TestGetOccurrences(t *testing.T) {
+	r, err := ReadDocxFile(testFile)
+	if err != nil {
+		panic(err)
+	}
+
+	var lookfor string
+	var expected int
+
+	lookfor = "This"
+	expected = 2
+	if occurrences := r.countOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	expected = 2
+	if occurrences := r.countOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "this"
+	expected = 0
+	if occurrences := r.countOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "this"
+	expected = 2
+	if occurrences := r.countOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "IS"
+	expected = 0
+	if occurrences := r.countOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	expected = 4
+	if occurrences := r.countOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+}
+
+func TestCountSeparatedOccurrences(t *testing.T) {
+	r, err := ReadDocxFile(testFile)
+	if err != nil {
+		panic(err)
+	}
+
+	var lookfor string
+	var expected int
+
+	lookfor = "This"
+	expected = 2
+	if occurrences := r.countSeparatedOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	expected = 2
+	if occurrences := r.countSeparatedOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "this"
+	expected = 0
+	if occurrences := r.countSeparatedOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "this"
+	expected = 2
+	if occurrences := r.countSeparatedOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	lookfor = "IS"
+	expected = 0
+	if occurrences := r.countSeparatedOccurrences(lookfor, true); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+
+	expected = 2
+	if occurrences := r.countSeparatedOccurrences(lookfor, false); occurrences != expected {
+		t.Errorf("Expected result %v, obtained %v", expected, occurrences)
+	}
+}
+
 func loadFile(file string) *Docx {
 	r, err := ReadDocxFile(file)
 	if err != nil {
