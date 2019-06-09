@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/go-xmlfmt/xmlfmt"
 )
 
 //ZipData Contains functions to work with data from a zip file
@@ -64,6 +66,16 @@ func (r *ReplaceDocx) Editable() *Docx {
 		headers: r.headers,
 		footers: r.footers,
 	}
+}
+
+// Content returns the content of the docx
+func (r *ReplaceDocx) Content() string {
+	return r.content
+}
+
+// FormattedContent return the formatted XML content
+func (r *ReplaceDocx) FormattedContent(indent string) string {
+	return xmlfmt.FormatXML(r.content, "", indent)
 }
 
 //Close closes the zip reader instance of RelaceDocx

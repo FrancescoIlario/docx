@@ -23,13 +23,16 @@ func main() {
 	text := replaceDocx.GetText()
 	fmt.Println(text)
 
-	docx := replaceDocx.Editable()
-	paragraphs, err := docx.ExtractParagraphs()
+	document := replaceDocx.Editable()
+	paragraphs, err := document.ExtractParagraphs()
 	panicIf(err)
 
 	for _, paragraph := range paragraphs {
 		fmt.Println(paragraph.Text(true))
 	}
+
+	formattedContent := replaceDocx.FormattedContent("")
+	fmt.Println(formattedContent)
 }
 
 func panicIf(err error) {

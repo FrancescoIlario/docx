@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 )
 
@@ -83,4 +84,28 @@ func encodeToken(decoder *xml.Decoder, token xml.Token, wrappingTag string) (*st
 
 	tokenString := fmt.Sprintln(buffer)
 	return &tokenString, nil
+}
+
+type Substitution struct {
+	Old  string
+	Link string
+}
+
+func (d *ReplaceDocx) createTemplate(substitutionData []Substitution) (*string, error) {
+	formattedContent := d.FormattedContent("    ")
+	var template string
+
+	for _, substitution := range substitutionData {
+		runRegex := `<w:r>(.*?)<w:t>(.*?)</w:t>(.*?)` + substitution.Old + `(.*?)</w:r>`
+		regex := regexp.MustCompile(runRegex)
+
+		replaced := regex.ReplaceAllStringFunc(formattedContent, func(match string) string {
+			finds := regex.FindAllString(match, -1)
+			// TODO: insert hyperlink snippet
+			return `<w:r>` + finds[0] + `<w:t>` + finds[1] + `</w:t>` + finds[2] + substitution.Link + finds[3] + `<\/w:r>`
+		})
+
+		template = replaced
+	}
+	return &template, nil
 }
