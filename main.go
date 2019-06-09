@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	fdocx "github.com/FrancescoIlario/docx/docx"
+	"github.com/FrancescoIlario/docx/docx"
 )
 
 var (
@@ -13,23 +13,30 @@ var (
 )
 
 func main() {
-	var editable *fdocx.ReplaceDocx
+	var replaceDocx *docx.ReplaceDocx
 	var err error
 
-	editable, err = fdocx.ReadDocxFile("data/docx/TestDocument.docx")
+	replaceDocx, err = docx.ReadDocxFile("data/docx/TestDocument.docx")
 	panicIf(err)
+	defer replaceDocx.Close()
 
-	text := editable.GetText()
+	text := replaceDocx.GetText()
 	fmt.Println(text)
 
-	occs := editable.GetOccurrences(*lookFor, true)
-	for _, occ := range occs {
-		fmt.Println(occ)
+	docx := replaceDocx.Editable()
+	paragraphs, err := docx.ExtractParagraphs()
+	panicIf(err)
+
+	for _, paragraph := range paragraphs {
+		fmt.Println(paragraph.Text(true))
 	}
 }
 
 func panicIf(err error) {
 	if err != nil {
+		if errData, ok := err.(*docx.WrongXMLSlice); ok {
+			log.Printf("%s\n", errData.XMLSlice)
+		}
 		log.Panicln(err)
 	}
 }
