@@ -4,7 +4,7 @@ import (
 	"html"
 	"strings"
 
-	"github.com/antchfx/xmlquery"
+	"github.com/FrancescoIlario/xmlquery"
 	"github.com/cbroglie/mustache"
 )
 

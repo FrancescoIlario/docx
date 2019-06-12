@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/FrancescoIlario/docx/stringext"
-	"github.com/antchfx/xmlquery"
+	"github.com/FrancescoIlario/xmlquery"
 )
 
 //ReplaceTextWithHyperlink ReplaceTextWithHyperlink
@@ -24,12 +24,10 @@ func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) er
 	textNodes := xmlquery.Find(doc, `//w:p/w:r/w:t`)
 	for _, textNode := range textNodes {
 		replaceDocx.SubstituteRunWithHyperlinkWrtTarget(textNode, lookFor, link)
-		log.Printf("content after substitution\n%v\n", replaceDocx.content)
 	}
 
 	docXML := getDocumentXML(doc)
 	replaceDocx.content = docXML
-	log.Println(docXML)
 
 	return replaceDocx.Editable().WriteToFile(outputFilePath)
 }
@@ -37,17 +35,20 @@ func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) er
 // SubstituteRunWithHyperlinkWrtTarget SubstituteRunWithHyperlinkWrtTarget
 func (d *ReplaceDocx) SubstituteRunWithHyperlinkWrtTarget(chosenOne *xmlquery.Node, target, link string) {
 	splits := stringext.SplitAfterWithSeparator(chosenOne.InnerText(), target)
-	var runs []*xmlquery.Node
+	var nodes []*xmlquery.Node
 
 	for _, split := range splits {
-		node, err := d.getConfiguredNodeForSplit(chosenOne, split, target, link, runs)
+		node, err := d.getConfiguredNodeForSplit(chosenOne, split, target, link, nodes)
 		if err == nil {
-			runs = append(runs, node)
+			nodes = append(nodes, node)
 		}
 	}
 
+	for _, run := range nodes {
+		log.Println(run.OutputXML(true))
+	}
 	parent := chosenOne.Parent
-	pile := inpileNodes(runs, parent.Parent)
+	pile := inpileNodes(nodes, parent.Parent)
 
 	pileRoot := substituteNodeWithPile(parent, pile)
 	d.content = fromNodeToRootOutputXML(pileRoot)

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antchfx/xmlquery"
+	"github.com/FrancescoIlario/xmlquery"
 	"github.com/cbroglie/mustache"
 )
 
@@ -181,7 +181,7 @@ func fromNodeToRootOutputXML(node *xmlquery.Node) string {
 			}
 		}
 
-		doc += root.OutputXML(true)
+		doc += html.UnescapeString(root.OutputXML(true))
 		visited = append(visited, root)
 		root = root.NextSibling
 	}

@@ -1,6 +1,6 @@
 package docx
 
-import "github.com/antchfx/xmlquery"
+import "github.com/FrancescoIlario/xmlquery"
 
 // XMLNode XMLNode
 type XMLNode xmlquery.Node

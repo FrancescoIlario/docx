@@ -1,6 +1,6 @@
 package docx
 
-import "github.com/antchfx/xmlquery"
+import "github.com/FrancescoIlario/xmlquery"
 
 func inpileNodes(nodes []*xmlquery.Node, parent *xmlquery.Node) []*xmlquery.Node {
 	for idx, curr := range nodes {
