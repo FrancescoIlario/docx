@@ -11,6 +11,36 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
+func NewHyperlinkRelNode(target, rID string) (*xmlquery.Node, error) {
+	documentHyperlinkXML, err := getDocumentHyperlinkRelXMLTemplate()
+	if err != nil {
+		return nil, err
+	}
+
+	templateData := map[string]string{
+		"Target": target,
+		"rID":    rID,
+	}
+
+	hyperlinkXML, err := mustache.Render(*documentHyperlinkXML, templateData)
+	if err != nil {
+		return nil, err
+	}
+	hyperlinkXML = html.UnescapeString(hyperlinkXML)
+
+	log.Printf("hyperlink xml\n%s\n", hyperlinkXML)
+	hyperlinkXMLReader := strings.NewReader(hyperlinkXML)
+	node, err := xmlquery.Parse(hyperlinkXMLReader)
+	if err != nil {
+		return nil, err
+	}
+	xpath := fmt.Sprintf(`//Relationship[@Target='%s']`, target)
+	newHyperlinkNode := xmlquery.Find(node, xpath)[0]
+
+	return newHyperlinkNode, nil
+}
+
+// NewHyperlinkNode NewHyperlinkNode
 func NewHyperlinkNode(text, rID string) (*xmlquery.Node, error) {
 	documentHyperlinkXML, err := getDocumentHyperlinkXMLTemplate()
 	if err != nil {
@@ -79,7 +109,7 @@ func (d *ReplaceDocx) AddHyperlinkForLink(link string) (*xmlquery.Node, error) {
 	newID := extractLHigherIDFromRelationships(relationshipsRoot) + 1
 	rID := fmt.Sprintf("rId%v", newID)
 
-	node, err := NewHyperlinkNode(link, rID)
+	node, err := NewHyperlinkRelNode(link, rID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,10 +118,79 @@ func (d *ReplaceDocx) AddHyperlinkForLink(link string) (*xmlquery.Node, error) {
 	node.PrevSibling = lastRelationship
 	lastRelationship.NextSibling = node
 
+	d.links = fromNodeToRootOutputXML(relationshipsRoot)
 	return node, nil
 }
 
+func fromNodeToRootOutputXML(node *xmlquery.Node) string {
+	var doc string
+
+	root := node
+	visited := []*xmlquery.Node{}
+	for {
+		for _, vis := range visited {
+			if vis == root {
+				log.Println("Loop found")
+				for idx, visLog := range visited {
+					log.Printf("%v - %v\n", idx, visLog)
+				}
+				panic("loop found")
+			}
+		}
+		if root.Parent != nil {
+			visited = append(visited, root)
+			root = root.Parent
+		} else {
+			break
+		}
+	}
+
+	visited = []*xmlquery.Node{}
+	for {
+		for _, vis := range visited {
+			if vis == root {
+				log.Println("Loop found")
+				for idx, visLog := range visited {
+					log.Printf("%v - %v\n", idx, visLog)
+				}
+				panic("loop found")
+			}
+		}
+		if root.PrevSibling != nil {
+			visited = append(visited, root)
+			root = root.PrevSibling
+		} else {
+			break
+		}
+	}
+
+	visited = []*xmlquery.Node{}
+	root = root.FirstChild
+	for {
+		if root == nil {
+			break
+		}
+
+		for _, vis := range visited {
+			if vis == root {
+				log.Println("Loop found")
+				for idx, visLog := range visited {
+					log.Printf("%v - %v\n", idx, visLog)
+				}
+				panic("loop found")
+			}
+		}
+
+		doc += root.OutputXML(true)
+		visited = append(visited, root)
+		root = root.NextSibling
+	}
+
+	return html.UnescapeString(doc)
+}
+
 func (d *ReplaceDocx) getRelationships() (*xmlquery.Node, error) {
+	log.Printf("links\n%s\n", d.links)
 	hyperlinkXMLReader := strings.NewReader(d.links)
 	node, err := xmlquery.Parse(hyperlinkXMLReader)
 	if err != nil {

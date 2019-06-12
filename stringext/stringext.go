@@ -11,14 +11,22 @@ func SplitAfterWithSeparator(toSplit, sep string) []string {
 
 		if index >= 0 {
 			sStr := element[0:index]
-			splits = append(splits, sStr)
+			splits = appendIfNotEmpty(splits, sStr)
+
 			if index < len(element) {
 				eStr := element[index:]
-				splits = append(splits, eStr)
+				splits = appendIfNotEmpty(splits, eStr)
 			}
 		} else {
-			splits = append(splits, element)
+			splits = appendIfNotEmpty(splits, element)
 		}
 	}
 	return splits
+}
+
+func appendIfNotEmpty(to []string, nw string) []string {
+	if nw != "" {
+		return append(to, nw)
+	}
+	return to
 }

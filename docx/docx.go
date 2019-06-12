@@ -49,7 +49,7 @@ func (d ZipFile) close() error {
 //ReplaceDocx main data structure
 type ReplaceDocx struct {
 	zipReader ZipData
-	Content   string
+	content   string
 	links     string
 	headers   map[string]string
 	footers   map[string]string
@@ -59,10 +59,10 @@ type ReplaceDocx struct {
 func (r *ReplaceDocx) Editable() *Docx {
 	return &Docx{
 		files:   r.zipReader.files(),
-		Content: r.Content,
-		Links:   r.links,
-		Headers: r.headers,
-		Footers: r.footers,
+		content: r.content,
+		links:   r.links,
+		headers: r.headers,
+		footers: r.footers,
 	}
 }
 
@@ -74,15 +74,15 @@ func (r *ReplaceDocx) Close() error {
 //Docx Main docx data structure
 type Docx struct {
 	files   []*zip.File
-	Content string
-	Links   string
-	Headers map[string]string
-	Footers map[string]string
+	content string
+	links   string
+	headers map[string]string
+	footers map[string]string
 }
 
 // ReplaceRaw replaces a raw string
 func (d *Docx) ReplaceRaw(oldString string, newString string, num int) {
-	d.Content = strings.Replace(d.Content, oldString, newString, num)
+	d.content = strings.Replace(d.content, oldString, newString, num)
 }
 
 //Replace encodes and replaces a string
@@ -95,7 +95,7 @@ func (d *Docx) Replace(oldString string, newString string, num int) (err error) 
 	if err != nil {
 		return err
 	}
-	d.Content = strings.Replace(d.Content, oldString, newString, num)
+	d.content = strings.Replace(d.content, oldString, newString, num)
 
 	return nil
 }
@@ -110,19 +110,19 @@ func (d *Docx) ReplaceLink(oldString string, newString string, num int) (err err
 	if err != nil {
 		return err
 	}
-	d.Links = strings.Replace(d.Links, oldString, newString, num)
+	d.links = strings.Replace(d.links, oldString, newString, num)
 
 	return nil
 }
 
 //ReplaceHeader replaces in Header
 func (d *Docx) ReplaceHeader(oldString string, newString string) (err error) {
-	return replaceHeaderFooter(d.Headers, oldString, newString)
+	return replaceHeaderFooter(d.headers, oldString, newString)
 }
 
 //ReplaceFooter replaces in Footer
 func (d *Docx) ReplaceFooter(oldString string, newString string) (err error) {
-	return replaceHeaderFooter(d.Footers, oldString, newString)
+	return replaceHeaderFooter(d.footers, oldString, newString)
 }
 
 //WriteToFile writes the docx to a file given the path
@@ -152,13 +152,13 @@ func (d *Docx) Write(ioWriter io.Writer) (err error) {
 			return err
 		}
 		if file.Name == "word/document.xml" {
-			writer.Write([]byte(d.Content))
+			writer.Write([]byte(d.content))
 		} else if file.Name == "word/_rels/document.xml.rels" {
-			writer.Write([]byte(d.Links))
-		} else if strings.Contains(file.Name, "header") && d.Headers[file.Name] != "" {
-			writer.Write([]byte(d.Headers[file.Name]))
-		} else if strings.Contains(file.Name, "footer") && d.Footers[file.Name] != "" {
-			writer.Write([]byte(d.Footers[file.Name]))
+			writer.Write([]byte(d.links))
+		} else if strings.Contains(file.Name, "header") && d.headers[file.Name] != "" {
+			writer.Write([]byte(d.headers[file.Name]))
+		} else if strings.Contains(file.Name, "footer") && d.footers[file.Name] != "" {
+			writer.Write([]byte(d.footers[file.Name]))
 		} else {
 			writer.Write(streamToByte(readCloser))
 		}
@@ -217,7 +217,7 @@ func ReadDocx(reader ZipData) (*ReplaceDocx, error) {
 	}
 
 	headers, footers, _ := readHeaderFooter(reader.files())
-	return &ReplaceDocx{zipReader: reader, Content: content, links: links, headers: headers, footers: footers}, nil
+	return &ReplaceDocx{zipReader: reader, content: content, links: links, headers: headers, footers: footers}, nil
 }
 
 func readHeaderFooter(files []*zip.File) (headerText map[string]string, footerText map[string]string, err error) {

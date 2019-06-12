@@ -1,7 +1,6 @@
 package docx
 
 import (
-	"errors"
 	"log"
 
 	"github.com/antchfx/xmlquery"
@@ -14,22 +13,24 @@ func substituteNode(toBeRemoved, toBeInserted *xmlquery.Node) {
 	prevSibling.NextSibling = toBeInserted
 }
 
-func substituteNodeWithNodes(toBeRemoved *xmlquery.Node, toBeInserted []*xmlquery.Node) error {
+func substituteNodeWithNodes(toBeRemoved *xmlquery.Node, toBeInserted []*xmlquery.Node) *xmlquery.Node {
 	if len(toBeInserted) == 0 {
-		return errors.New("empty list of xml nodes passed")
+		return toBeRemoved
+	}
+	first, last := toBeInserted[0], toBeInserted[len(toBeInserted)-1]
+	prevSibling := toBeRemoved.PrevSibling
+
+	for idx, el := range toBeInserted {
+		log.Printf("%v - %v\n", idx, el.OutputXML(true))
 	}
 
-	first, last := toBeInserted[0], toBeInserted[len(toBeInserted)-1]
-
-	last.NextSibling = toBeRemoved.NextSibling
-
-	prevSibling := toBeRemoved.PrevSibling
-	
 	if prevSibling != nil {
 		log.Printf("Previous sibling\n%s\n", prevSibling.OutputXML(true))
 		prevSibling.NextSibling = first
+		first.PrevSibling = prevSibling
 	} else {
 		if toBeRemoved.Parent != nil {
+			// this should be wrong -> rev. why?
 			log.Printf("Parent\n%s\n", toBeRemoved.Parent.OutputXML(true))
 			toBeRemoved.Parent.FirstChild = first
 		} else {
@@ -37,5 +38,8 @@ func substituteNodeWithNodes(toBeRemoved *xmlquery.Node, toBeInserted []*xmlquer
 		}
 	}
 
-	return nil
+	last.NextSibling = toBeRemoved.NextSibling
+
+	log.Printf("after substitution\n%s\n", fromNodeToRootOutputXML(first))
+	return first
 }

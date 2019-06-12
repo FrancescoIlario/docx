@@ -6,66 +6,82 @@ import (
 
 	"github.com/FrancescoIlario/docx/stringext"
 	"github.com/antchfx/xmlquery"
-	"github.com/cbroglie/mustache"
 )
 
+//ReplaceTextWithHyperlink ReplaceTextWithHyperlink
+func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) error {
+	replaceDocx, err := ReadDocxFile(filePath)
+	if err != nil {
+		return err
+	}
+	defer replaceDocx.Close()
+
+	doc, err := xmlquery.Parse(strings.NewReader(replaceDocx.content))
+	if err != nil {
+		return err
+	}
+
+	textNodes := xmlquery.Find(doc, `//w:p/w:r/w:t`)
+	for _, textNode := range textNodes {
+		replaceDocx.SubstituteRunWithHyperlinkWrtTarget(textNode, lookFor, link)
+		log.Printf("content after substitution\n%v\n", replaceDocx.content)
+	}
+
+	docXML := getDocumentXML(doc)
+	replaceDocx.content = docXML
+	log.Println(docXML)
+
+	return replaceDocx.Editable().WriteToFile(outputFilePath)
+}
+
 // SubstituteRunWithHyperlinkWrtTarget SubstituteRunWithHyperlinkWrtTarget
-func (d *ReplaceDocx) SubstituteRunWithHyperlinkWrtTarget(chosenOne *xmlquery.Node, target, link string) error {
+func (d *ReplaceDocx) SubstituteRunWithHyperlinkWrtTarget(chosenOne *xmlquery.Node, target, link string) {
 	splits := stringext.SplitAfterWithSeparator(chosenOne.InnerText(), target)
 	var runs []*xmlquery.Node
 
 	for _, split := range splits {
-		if split == target {
-			if node, err := d.GetHyperlinkOrAddForLink(link); err == nil {
-				if len(runs) > 0 {
-					lastRun := runs[len(runs)-1]
-					node.PrevSibling = lastRun
-					lastRun.LastChild = node
-				}
-
-				runs = append(runs, node)
-			} else {
-				log.Println(err)
-			}
-		} else {
-			runNode := *chosenOne
-			runNode.Data = split // TODO this is wrong
-
-			if runsSize := len(runs); runsSize > 0 {
-				lastRun := runs[len(runs)-1]
-				runNode.PrevSibling = lastRun
-				lastRun.LastChild = &runNode
-			}
-
-			runs = append(runs, &runNode)
+		node, err := d.getConfiguredNodeForSplit(chosenOne, split, target, link, runs)
+		if err == nil {
+			runs = append(runs, node)
 		}
 	}
 
-	substituteNodeWithNodes(chosenOne.Parent, runs)
+	parent := chosenOne.Parent
+	pile := inpileNodes(runs, parent.Parent)
 
-	return nil
+	first := substituteNodeWithNodes(parent, pile)
+	d.content = fromNodeToRootOutputXML(first)
 }
 
-func getRunNode(text string) (*xmlquery.Node, error) {
-	documentRunXML, err := getDocumentRunXMLTemplate()
+func (d *ReplaceDocx) getConfiguredNodeForSplit(chosenOne *xmlquery.Node, split, target, link string, runs []*xmlquery.Node) (*xmlquery.Node, error) {
+	if split == target {
+		return d.getConfiguredHyperlinkNode(chosenOne, target, link, runs)
+	}
+	return getTextRunFromRun(chosenOne.Parent, split)
+}
+
+func (d *ReplaceDocx) getConfiguredHyperlinkNode(chosenOne *xmlquery.Node, target, link string, runs []*xmlquery.Node) (*xmlquery.Node, error) {
+	hyperlinkRelNode, err := d.GetHyperlinkOrAddForLink(link)
 	if err != nil {
 		return nil, err
 	}
 
-	templateData := map[string]string{
-		"Text": text,
-	}
-
-	runXML, err := mustache.Render(*documentRunXML, templateData)
+	rID := hyperlinkRelNode.SelectAttr("Id")
+	node, err := NewHyperlinkNode(target, rID)
 	if err != nil {
 		return nil, err
 	}
-	runXMLReader := strings.NewReader(runXML)
-	node, err := xmlquery.Parse(runXMLReader)
+	return node, err
+}
+
+func getTextRunFromRun(run *xmlquery.Node, text string) (*xmlquery.Node, error) {
+	newRunNode, err := docxRunDeepCopy(run)
 	if err != nil {
 		return nil, err
 	}
 
-	newRunNode := xmlquery.Find(node, "//w:r")[0]
+	textNode := xmlquery.Find(newRunNode, `//w:t`)[0]
+	textNode.FirstChild.Data = text
+
 	return newRunNode, nil
 }
