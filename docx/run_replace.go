@@ -49,8 +49,8 @@ func (d *ReplaceDocx) SubstituteRunWithHyperlinkWrtTarget(chosenOne *xmlquery.No
 	parent := chosenOne.Parent
 	pile := inpileNodes(runs, parent.Parent)
 
-	first := substituteNodeWithNodes(parent, pile)
-	d.content = fromNodeToRootOutputXML(first)
+	pileRoot := substituteNodeWithPile(parent, pile)
+	d.content = fromNodeToRootOutputXML(pileRoot)
 }
 
 func (d *ReplaceDocx) getConfiguredNodeForSplit(chosenOne *xmlquery.Node, split, target, link string, runs []*xmlquery.Node) (*xmlquery.Node, error) {

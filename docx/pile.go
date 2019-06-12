@@ -24,17 +24,21 @@ func setParent(parent *xmlquery.Node, nodes ...*xmlquery.Node) {
 	}
 }
 
-func substituteNodeWithPile(del *xmlquery.Node, pile []*xmlquery.Node) {
-	setParent(del.Parent, pile...)
+func substituteNodeWithPile(del *xmlquery.Node, pile []*xmlquery.Node) *xmlquery.Node {
+	parent := del.Parent
+	setParent(parent, pile...)
 
 	first, last := pile[0], pile[len(pile)-1]
 	if prev := del.PrevSibling; prev != nil {
 		prev.NextSibling = first
 		first.PrevSibling = prev
-	} else if parent := del.Parent; parent != nil {
+	} else {
 		parent.FirstChild = first
 		if parent.LastChild == del {
 			parent.LastChild = last
 		}
 	}
+	last.NextSibling = del.NextSibling
+
+	return parent
 }
