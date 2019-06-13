@@ -1,6 +1,8 @@
 package docx
 
 import (
+	"encoding/xml"
+	"fmt"
 	"html"
 	"io/ioutil"
 	"strings"
@@ -15,6 +17,7 @@ const (
 	textTemplatePath         = `templates/text.xml`
 	hyperlinkTemplatePath    = "templates/hyperlink.xml"
 	hyperlinkRelTemplatePath = "templates/hyperlink_rel.xml"
+	spacePreserveAttr        = `xml:space="preserve"`
 )
 
 func parseFile(filepath string) (*string, error) {
@@ -167,7 +170,7 @@ func getRunNode(text string) (*xmlquery.Node, error) {
 	return newRunNode, nil
 }
 
-func getTextNode(text string) (*xmlquery.Node, error) {
+func getTextNode(text string, attrs ...string) (*xmlquery.Node, error) {
 	documentTemplate, err := getDocumentXMLTemplate()
 	if err != nil {
 		return nil, err
@@ -189,8 +192,14 @@ func getTextNode(text string) (*xmlquery.Node, error) {
 	}
 	documentRunXML = html.UnescapeString(documentRunXML)
 
+	var attrsStr string
+	if needsAttrsStringXMLSpacePreserve(text, attrs) {
+		attrsStr = strings.Join([]string{attrsStr, spacePreserveAttr}, " ")
+	}
+
 	documentTemplateData = map[string]string{
-		"Text": text,
+		"Text":  text,
+		"Attrs": attrsStr,
 	}
 
 	textDocumentXML, err := mustache.Render(documentRunXML, documentTemplateData)
@@ -207,4 +216,20 @@ func getTextNode(text string) (*xmlquery.Node, error) {
 
 	newTxtNode := xmlquery.Find(documentNewTxtNode, `//w:t`)[0]
 	return newTxtNode, nil
+}
+
+func needsAttrsXMLSpacePreserve(text string, attrs []xml.Attr) bool {
+	var attrsStrs []string
+	for _, attr := range attrs {
+		attrStr := fmt.Sprintf(`%s:%s="%s"`, attr.Name.Space, attr.Name.Local, attr.Value)
+		attrsStrs = append(attrsStrs, attrStr)
+	}
+
+	return needsAttrsStringXMLSpacePreserve(text, attrsStrs)
+}
+
+func needsAttrsStringXMLSpacePreserve(text string, attrs []string) bool {
+	attrsStr := strings.Join(attrs, " ")
+	return (strings.HasPrefix(text, " ") || strings.HasSuffix(text, " ")) &&
+		!strings.Contains(attrsStr, spacePreserveAttr)
 }

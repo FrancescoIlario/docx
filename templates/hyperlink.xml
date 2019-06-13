@@ -1,1 +1,1 @@
-<w:hyperlink r:id="{{rID}}"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>{{Text}}</w:t></w:r></w:hyperlink>
+<w:hyperlink r:id="{{rID}}"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t{{Attrs}}>{{Text}}</w:t></w:r></w:hyperlink>

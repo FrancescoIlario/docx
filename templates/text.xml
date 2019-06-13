@@ -1,1 +1,1 @@
-<w:t>{{Text}}</w:t>
+<w:t{{Attrs}}>{{Text}}</w:t>

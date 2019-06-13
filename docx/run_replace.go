@@ -1,6 +1,7 @@
 package docx
 
 import (
+	"encoding/xml"
 	"log"
 	"strings"
 
@@ -83,6 +84,11 @@ func getTextRunFromRun(run *xmlquery.Node, text string) (*xmlquery.Node, error) 
 
 	textNode := xmlquery.Find(newRunNode, `//w:t`)[0]
 	textNode.FirstChild.Data = text
+
+	if needsAttrsXMLSpacePreserve(text, textNode.Attr) {
+		spacePreserve := xml.Attr{Name: xml.Name{Space: "xml", Local: "space"}, Value: "preserve"}
+		textNode.Attr = append(textNode.Attr, spacePreserve)
+	}
 
 	return newRunNode, nil
 }

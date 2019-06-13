@@ -11,6 +11,7 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
+//  NewHyperlinkRelNode  NewHyperlinkRelNode
 func NewHyperlinkRelNode(target, rID string) (*xmlquery.Node, error) {
 	documentHyperlinkXML, err := getDocumentHyperlinkRelXMLTemplate()
 	if err != nil {
@@ -47,9 +48,15 @@ func NewHyperlinkNode(text, rID string) (*xmlquery.Node, error) {
 		return nil, err
 	}
 
+	var attrs string
+	if needsAttrsStringXMLSpacePreserve(text, []string{}) {
+		attrs = " " + spacePreserveAttr
+	}
+
 	templateData := map[string]string{
-		"Text": text,
-		"rID":  rID,
+		"Attrs": attrs,
+		"Text":  text,
+		"rID":   rID,
 	}
 
 	hyperlinkXML, err := mustache.Render(*documentHyperlinkXML, templateData)
