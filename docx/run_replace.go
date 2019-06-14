@@ -9,7 +9,7 @@ import (
 	"github.com/FrancescoIlario/xmlquery"
 )
 
-//ReplaceTextWithHyperlink ReplaceTextWithHyperlink
+//ReplaceTextWithHyperlink todo
 func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) error {
 	replaceDocx, err := ReadDocxFile(filePath)
 	if err != nil {
@@ -27,13 +27,12 @@ func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) er
 		replaceDocx.SubstituteRunWithHyperlinkWrtTarget(textNode, lookFor, link)
 	}
 
-	docXML := getDocumentXML(doc)
-	replaceDocx.content = docXML
+	replaceDocx.content = fromNodeToRootOutputXML(doc)
 
 	return replaceDocx.Editable().WriteToFile(outputFilePath)
 }
 
-// SubstituteRunWithHyperlinkWrtTarget SubstituteRunWithHyperlinkWrtTarget
+// SubstituteRunWithHyperlinkWrtTarget todo
 func (d *ReplaceDocx) SubstituteRunWithHyperlinkWrtTarget(chosenOne *xmlquery.Node, target, link string) {
 	splits := stringext.SplitAfterWithSeparator(chosenOne.InnerText(), target)
 	var nodes []*xmlquery.Node
@@ -63,7 +62,7 @@ func (d *ReplaceDocx) getConfiguredNodeForSplit(chosenOne *xmlquery.Node, split,
 }
 
 func (d *ReplaceDocx) getConfiguredHyperlinkNode(chosenOne *xmlquery.Node, target, link string, runs []*xmlquery.Node) (*xmlquery.Node, error) {
-	hyperlinkRelNode, err := d.GetHyperlinkOrAddForLink(link)
+	hyperlinkRelNode, err := d.GetOrAddHyperlinkForLink(link)
 	if err != nil {
 		return nil, err
 	}

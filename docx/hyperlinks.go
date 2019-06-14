@@ -11,7 +11,7 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
-//  NewHyperlinkRelNode  NewHyperlinkRelNode
+// NewHyperlinkRelNode  todo
 func NewHyperlinkRelNode(target, rID string) (*xmlquery.Node, error) {
 	documentHyperlinkXML, err := getDocumentHyperlinkRelXMLTemplate()
 	if err != nil {
@@ -41,7 +41,7 @@ func NewHyperlinkRelNode(target, rID string) (*xmlquery.Node, error) {
 	return newHyperlinkNode, nil
 }
 
-// NewHyperlinkNode NewHyperlinkNode
+// NewHyperlinkNode todo
 func NewHyperlinkNode(text, rID string) (*xmlquery.Node, error) {
 	documentHyperlinkXML, err := getDocumentHyperlinkXMLTemplate()
 	if err != nil {
@@ -76,8 +76,9 @@ func NewHyperlinkNode(text, rID string) (*xmlquery.Node, error) {
 	return newHyperlinkNode, nil
 }
 
-//GetHyperlinkOrAddForLink GetHyperlinkOrAddForLink
-func (d *ReplaceDocx) GetHyperlinkOrAddForLink(link string) (*xmlquery.Node, error) {
+// GetOrAddHyperlinkForLink looks for an existing relationship for the provided link and if the research
+// is unsuccessfull, it creates and returns a new relationship describing the provided link
+func (d *ReplaceDocx) GetOrAddHyperlinkForLink(link string) (*xmlquery.Node, error) {
 	node, err := d.GetHyperlinkForLink(link)
 	if err != nil {
 		log.Println(err)
@@ -89,7 +90,8 @@ func (d *ReplaceDocx) GetHyperlinkOrAddForLink(link string) (*xmlquery.Node, err
 	return d.AddHyperlinkForLink(link)
 }
 
-// GetHyperlinkForLink GetHyperlinkForLink
+// GetHyperlinkForLink looks in document.rel.xml for a relationship that represents an Hyperlink to the
+// given link. If a matching relationship is found it is returned, otherwise is returned the nil value
 func (d *ReplaceDocx) GetHyperlinkForLink(link string) (*xmlquery.Node, error) {
 	hyperlinkXMLReader := strings.NewReader(d.links)
 	node, err := xmlquery.Parse(hyperlinkXMLReader)
@@ -106,9 +108,9 @@ func (d *ReplaceDocx) GetHyperlinkForLink(link string) (*xmlquery.Node, error) {
 	return nil, nil
 }
 
-// AddHyperlinkForLink adds a new relationship for the link and returns the id
+// AddHyperlinkForLink adds a new relationship for the link and returns the it
 func (d *ReplaceDocx) AddHyperlinkForLink(link string) (*xmlquery.Node, error) {
-	relationshipsRoot, err := d.getRelationships()
+	relationshipsRoot, err := d.GetRelationships()
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +198,8 @@ func fromNodeToRootOutputXML(node *xmlquery.Node) string {
 	return html.UnescapeString(doc)
 }
 
-func (d *ReplaceDocx) getRelationships() (*xmlquery.Node, error) {
+// GetRelationships returns the relationships of the docx file
+func (d *ReplaceDocx) GetRelationships() (*xmlquery.Node, error) {
 	log.Printf("links\n%s\n", d.links)
 	hyperlinkXMLReader := strings.NewReader(d.links)
 	node, err := xmlquery.Parse(hyperlinkXMLReader)
