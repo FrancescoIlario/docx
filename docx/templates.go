@@ -7,21 +7,35 @@ import (
 	"io/ioutil"
 	"strings"
 
+	assets "github.com/FrancescoIlario/docx/assets/templates"
 	"github.com/antchfx/xmlquery"
 	"github.com/cbroglie/mustache"
 )
 
 const (
-	documentTemplatePath     = `templates/docx_document.xml`
-	runTemplatePath          = `templates/run.xml`
-	textTemplatePath         = `templates/text.xml`
-	hyperlinkTemplatePath    = "templates/hyperlink.xml"
-	hyperlinkRelTemplatePath = "templates/hyperlink_rel.xml"
+	documentTemplatePath     = `docx_document.xml`
+	runTemplatePath          = `run.xml`
+	textTemplatePath         = `text.xml`
+	hyperlinkTemplatePath    = "hyperlink.xml"
+	hyperlinkRelTemplatePath = "hyperlink_rel.xml"
 	spacePreserveAttr        = `xml:space="preserve"`
+
+	// documentTemplatePath     = `templates/docx_document.xml`
+	// runTemplatePath          = `templates/run.xml`
+	// textTemplatePath         = `templates/text.xml`
+	// hyperlinkTemplatePath    = "templates/hyperlink.xml"
+	// hyperlinkRelTemplatePath = "templates/hyperlink_rel.xml"
+
 )
 
 func parseFile(filepath string) (*string, error) {
-	data, err := ioutil.ReadFile(filepath)
+	file, err := assets.Assets.Open(filepath)
+	if err != nil {
+		panic(err)
+	}
+
+	// data, err := ioutil.ReadFile(filepath)
+	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,7 @@
 package main
 
+//go:generate go run assets/fgenerate.go
+
 import (
 	"log"
 
@@ -13,7 +15,14 @@ const (
 )
 
 func main() {
-	err := docx.ReplaceTextWithHyperlink(filepathTestDocument, filepathOutputDocument, "This", "Allegato.txt")
+	doc, err := docx.ReadDocxFile(filepathSimplestDocument)
+	panicIf(err)
+	defer doc.Close()
+
+	err = doc.ReplaceTextWithHyperlink("This", "Allegato.txt")
+	panicIf(err)
+
+	err = doc.Editable().WriteToFile(filepathOutputDocument)
 	panicIf(err)
 }
 

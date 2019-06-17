@@ -10,13 +10,7 @@ import (
 )
 
 //ReplaceTextWithHyperlink todo
-func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) error {
-	replaceDocx, err := ReadDocxFile(filePath)
-	if err != nil {
-		return err
-	}
-	defer replaceDocx.Close()
-
+func (replaceDocx *ReplaceDocx) ReplaceTextWithHyperlink(lookFor, link string) error {
 	doc, err := xmlquery.Parse(strings.NewReader(replaceDocx.content))
 	if err != nil {
 		return err
@@ -28,8 +22,7 @@ func ReplaceTextWithHyperlink(filePath, outputFilePath, lookFor, link string) er
 	}
 
 	replaceDocx.content = fromNodeToRootOutputXML(doc)
-
-	return replaceDocx.Editable().WriteToFile(outputFilePath)
+	return nil
 }
 
 // SubstituteRunWithHyperlinkWrtTarget todo
