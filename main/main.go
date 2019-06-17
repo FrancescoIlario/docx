@@ -5,7 +5,7 @@ package main
 import (
 	"log"
 
-	"github.com/FrancescoIlario/docx/docx"
+	"github.com/FrancescoIlario/docx"
 )
 
 const (

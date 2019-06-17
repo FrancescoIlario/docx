@@ -6,6 +6,6 @@ deps:
 
 build:
 	go generate
-	go build main.go
+	go build -o main/main main/main.go
 
 .PHONY: run build deps
