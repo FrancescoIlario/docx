@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/FrancescoIlario/docx/stringext"
-	"github.com/FrancescoIlario/xmlquery"
+	"github.com/antchfx/xmlquery"
 )
 
 //ReplaceTextWithHyperlink todo
