@@ -15,7 +15,7 @@ func docxRunDeepCopy(src *xmlquery.Node) (*xmlquery.Node, error) {
 	}
 
 	xmlCode := src.OutputXML(true)
-	docXMLCode, err := mustache.Render(*docTemplate, map[string]string{"Template": xmlCode})
+	docXMLCode, err := mustache.Render(docTemplate, map[string]string{"Template": xmlCode})
 	if err != nil {
 		return nil, err
 	}

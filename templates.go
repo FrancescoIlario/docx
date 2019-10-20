@@ -13,22 +13,16 @@ import (
 )
 
 const (
-	documentTemplatePath     = `docx_document.xml`
-	runTemplatePath          = `run.xml`
-	textTemplatePath         = `text.xml`
-	hyperlinkTemplatePath    = "hyperlink.xml"
-	hyperlinkRelTemplatePath = "hyperlink_rel.xml"
-	spacePreserveAttr        = `xml:space="preserve"`
-
-	// documentTemplatePath     = `templates/docx_document.xml`
-	// runTemplatePath          = `templates/run.xml`
-	// textTemplatePath         = `templates/text.xml`
-	// hyperlinkTemplatePath    = "templates/hyperlink.xml"
-	// hyperlinkRelTemplatePath = "templates/hyperlink_rel.xml"
-
+	documentTemplatePath           = `docx_document.xml`
+	runTemplatePath                = `run.xml`
+	textTemplatePath               = `text.xml`
+	hyperlinkTemplatePath          = "hyperlink.xml"
+	hyperlinkRelTemplatePath       = "hyperlink_rel.xml"
+	spacePreserveAttr              = `xml:space="preserve"`
+	_internetLinkStyleTemplatePath = "styles_internetlink.xml"
 )
 
-func parseFile(filepath string) (*string, error) {
+func parseFile(filepath string) (string, error) {
 	file, err := assets.Assets.Open(filepath)
 	if err != nil {
 		panic(err)
@@ -37,27 +31,49 @@ func parseFile(filepath string) (*string, error) {
 	// data, err := ioutil.ReadFile(filepath)
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	stringData := string(data)
-	return &stringData, nil
+	return string(data), nil
 }
 
-func getHyperlinkXMLTemplate() (*string, error) {
+func getHyperlinkXMLTemplate() (string, error) {
 	return parseFile(hyperlinkTemplatePath)
 }
 
-func getHyperlinkRelXMLTemplate() (*string, error) {
+func getHyperlinkRelXMLTemplate() (string, error) {
 	return parseFile(hyperlinkRelTemplatePath)
 }
 
-func getRunXMLTemplate() (*string, error) {
+func getRunXMLTemplate() (string, error) {
 	return parseFile(runTemplatePath)
 }
 
-func getTextXMLTemplate() (*string, error) {
+func getTextXMLTemplate() (string, error) {
 	return parseFile(textTemplatePath)
+}
+
+func getInternetLinkStyleXMLTemplate() (string, error) {
+	documentTemplate, err := getDocumentXMLTemplate()
+	if err != nil {
+		return "", err
+	}
+
+	ilsTemplate, err := parseFile(_internetLinkStyleTemplatePath)
+	if err != nil {
+		return "", err
+	}
+
+	documentTemplateData := map[string]string{
+		"Template": ilsTemplate,
+	}
+
+	documentRunXML, err := mustache.Render(documentTemplate, documentTemplateData)
+	if err != nil {
+		return "", err
+	}
+
+	return documentRunXML, nil
 }
 
 func getDocumentTextXMLTemplate() (*string, error) {
@@ -72,10 +88,10 @@ func getDocumentTextXMLTemplate() (*string, error) {
 	}
 
 	documentTemplateData := map[string]string{
-		"Template": *runTemplate,
+		"Template": runTemplate,
 	}
 
-	documentRunXML, err := mustache.Render(*documentTemplate, documentTemplateData)
+	documentRunXML, err := mustache.Render(documentTemplate, documentTemplateData)
 	if err != nil {
 		return nil, err
 	}
@@ -95,10 +111,10 @@ func getDocumentRunXMLTemplate() (*string, error) {
 	}
 
 	documentTemplateData := map[string]string{
-		"Template": *runTemplate,
+		"Template": runTemplate,
 	}
 
-	documentRunXML, err := mustache.Render(*documentTemplate, documentTemplateData)
+	documentRunXML, err := mustache.Render(documentTemplate, documentTemplateData)
 	if err != nil {
 		return nil, err
 	}
@@ -118,10 +134,10 @@ func getDocumentHyperlinkRelXMLTemplate() (*string, error) {
 	}
 
 	documentTemplateData := map[string]string{
-		"Template": *hyperlinkTemplate,
+		"Template": hyperlinkTemplate,
 	}
 
-	documentHyperlinkXML, err := mustache.Render(*documentTemplate, documentTemplateData)
+	documentHyperlinkXML, err := mustache.Render(documentTemplate, documentTemplateData)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +157,10 @@ func getDocumentHyperlinkXMLTemplate() (*string, error) {
 	}
 
 	documentTemplateData := map[string]string{
-		"Template": *hyperlinkTemplate,
+		"Template": hyperlinkTemplate,
 	}
 
-	documentHyperlinkXML, err := mustache.Render(*documentTemplate, documentTemplateData)
+	documentHyperlinkXML, err := mustache.Render(documentTemplate, documentTemplateData)
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +168,10 @@ func getDocumentHyperlinkXMLTemplate() (*string, error) {
 	return &documentHyperlinkXML, nil
 }
 
-func getDocumentXMLTemplate() (*string, error) {
+func getDocumentXMLTemplate() (string, error) {
 	data, err := parseFile(documentTemplatePath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return data, nil
 }
@@ -194,13 +210,13 @@ func getTextNode(text string, attrs ...string) (*xmlquery.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	textXMLTemplate := html.UnescapeString(*pTextXMLTemplate)
+	textXMLTemplate := html.UnescapeString(pTextXMLTemplate)
 
 	documentTemplateData := map[string]string{
 		"Template": textXMLTemplate,
 	}
 
-	documentRunXML, err := mustache.Render(*documentTemplate, documentTemplateData)
+	documentRunXML, err := mustache.Render(documentTemplate, documentTemplateData)
 	if err != nil {
 		return nil, err
 	}

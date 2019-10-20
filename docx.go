@@ -51,6 +51,7 @@ type ReplaceDocx struct {
 	zipReader ZipData
 	content   string
 	links     string
+	styles    string
 	headers   map[string]string
 	footers   map[string]string
 }
@@ -61,6 +62,7 @@ func (r *ReplaceDocx) Editable() *Docx {
 		files:   r.zipReader.files(),
 		content: r.content,
 		links:   r.links,
+		styles:  r.styles,
 		headers: r.headers,
 		footers: r.footers,
 	}
@@ -76,6 +78,7 @@ type Docx struct {
 	files   []*zip.File
 	content string
 	links   string
+	styles  string
 	headers map[string]string
 	footers map[string]string
 }
@@ -155,6 +158,8 @@ func (d *Docx) Write(ioWriter io.Writer) (err error) {
 			writer.Write([]byte(d.content))
 		} else if file.Name == "word/_rels/document.xml.rels" {
 			writer.Write([]byte(d.links))
+		} else if file.Name == "word/styles.xml" {
+			writer.Write([]byte(d.styles))
 		} else if strings.Contains(file.Name, "header") && d.headers[file.Name] != "" {
 			writer.Write([]byte(d.headers[file.Name]))
 		} else if strings.Contains(file.Name, "footer") && d.footers[file.Name] != "" {
@@ -216,8 +221,20 @@ func ReadDocx(reader ZipData) (*ReplaceDocx, error) {
 		return nil, err
 	}
 
+	styles, err := readStyles(reader.files())
+	if err != nil {
+		return nil, err
+	}
+
 	headers, footers, _ := readHeaderFooter(reader.files())
-	return &ReplaceDocx{zipReader: reader, content: content, links: links, headers: headers, footers: footers}, nil
+	return &ReplaceDocx{
+			zipReader: reader,
+			content:   content,
+			links:     links,
+			styles:    styles,
+			headers:   headers,
+			footers:   footers},
+		nil
 }
 
 func readHeaderFooter(files []*zip.File) (headerText map[string]string, footerText map[string]string, err error) {
@@ -293,6 +310,22 @@ func readLinks(files []*zip.File) (text string, err error) {
 	return
 }
 
+func readStyles(files []*zip.File) (text string, err error) {
+	var documentFile *zip.File
+	documentFile, err = retrieveStylesDoc(files)
+	if err != nil {
+		return text, err
+	}
+	var documentReader io.ReadCloser
+	documentReader, err = documentFile.Open()
+	if err != nil {
+		return text, err
+	}
+
+	text, err = wordDocToString(documentReader)
+	return
+}
+
 func wordDocToString(reader io.Reader) (string, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -321,6 +354,18 @@ func retrieveLinkDoc(files []*zip.File) (file *zip.File, err error) {
 	}
 	if file == nil {
 		err = errors.New("document.xml.rels file not found")
+	}
+	return
+}
+
+func retrieveStylesDoc(files []*zip.File) (file *zip.File, err error) {
+	for _, f := range files {
+		if f.Name == "word/styles.xml" {
+			file = f
+		}
+	}
+	if file == nil {
+		err = errors.New("styles.xml file not found")
 	}
 	return
 }

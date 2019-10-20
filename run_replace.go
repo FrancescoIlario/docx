@@ -10,18 +10,24 @@ import (
 )
 
 //ReplaceTextWithHyperlink todo
-func (replaceDocx *ReplaceDocx) ReplaceTextWithHyperlink(lookFor, link string) error {
-	doc, err := xmlquery.Parse(strings.NewReader(replaceDocx.content))
+func (d *ReplaceDocx) ReplaceTextWithHyperlink(lookFor, link string) error {
+	doc, err := xmlquery.Parse(strings.NewReader(d.content))
 	if err != nil {
 		return err
 	}
 
 	textNodes := xmlquery.Find(doc, `//w:p/w:r/w:t`)
-	for _, textNode := range textNodes {
-		replaceDocx.SubstituteRunWithHyperlinkWrtTarget(textNode, lookFor, link)
+	if len(textNodes) > 0 {
+		if err := d.AddInternetLinkStyleIfMissing(); err != nil {
+			log.Printf("InternetLink Style: %v", err)
+		}
 	}
 
-	replaceDocx.content = fromNodeToRootOutputXML(doc)
+	for _, textNode := range textNodes {
+		d.SubstituteRunWithHyperlinkWrtTarget(textNode, lookFor, link)
+	}
+
+	d.content = fromNodeToRootOutputXML(doc)
 	return nil
 }
 
