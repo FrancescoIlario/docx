@@ -34,6 +34,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
+	return nil
 }
 
 func panicIf(err error) {
